@@ -17,7 +17,7 @@
             python313
             uv
             postgresql
-            mysql
+            mariadb
             sqlite
             git
             jj
