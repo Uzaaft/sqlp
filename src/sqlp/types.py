@@ -100,8 +100,7 @@ class Column(Generic[T]):
     """Column metadata for table definitions.
 
     Attributes:
-        name: Column name in database (set by Table metaclass)
-        python_type: Python type hint
+        python_type: Python type hint (inferred from Table class annotations)
         primary_key: Whether this is a primary key
         unique: Whether values must be unique
         nullable: Whether NULL values are allowed
@@ -109,7 +108,7 @@ class Column(Generic[T]):
         default_factory: Callable that returns default value
     """
 
-    python_type: type
+    python_type: type | None = None
     primary_key: bool = False
     unique: bool = False
     nullable: bool = False
@@ -126,8 +125,9 @@ class Column(Generic[T]):
         if self.primary_key and self.nullable:
             raise ValueError("Primary key cannot be nullable")
 
-        # Validate type is supported
-        self._validate_type()
+        # Validate type is supported (only if type is set)
+        if self.python_type is not None:
+            self._validate_type()
 
     def _validate_type(self) -> None:
         """Assert type is mappable to all database types."""
