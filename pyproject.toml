@@ -25,3 +25,6 @@ dev = [
     "mypy>=1.8",
     "ruff>=0.3",
 ]
+
+[tool.sqlp]
+schema_snapshot_path = ".sqlp/schema.json"
