@@ -17,6 +17,7 @@ from sqlp.sql import (
 )
 from sqlp.table import Table
 from sqlp.types import ColumnCondition, CompoundCondition, Union
+from sqlp.snapshot import SchemaRegistry, load_schema_registry, should_validate_with_snapshot
 
 T = TypeVar("T")
 
@@ -172,6 +173,7 @@ class AsyncPool:
         min_size: int = 5,
         max_size: int = 20,
         statement_cache_size: int = 100,
+        registry: SchemaRegistry | None = None,
     ) -> None:
         """Initialize connection pool.
 
@@ -180,6 +182,7 @@ class AsyncPool:
             min_size: Minimum connections in pool (unused for SQLite, single connection)
             max_size: Maximum connections in pool
             statement_cache_size: Max prepared statements to cache per connection
+            registry: Optional SchemaRegistry for offline validation
         """
         assert database_url, "Database URL required"
         assert max_size > 0, "max_size must be positive"
@@ -188,6 +191,14 @@ class AsyncPool:
         self.min_size = min(min_size, max_size)
         self.max_size = max_size
         self.statement_cache_size = statement_cache_size
+        
+        # Use provided registry, or load from config if env var says to use snapshot
+        if registry is not None:
+            self.registry = registry
+        elif should_validate_with_snapshot():
+            self.registry = load_schema_registry()
+        else:
+            self.registry = None
 
         # Parse database URL
         parsed = urlparse(database_url)
@@ -309,22 +320,23 @@ class AsyncPool:
         return SelectQueryBuilder(
             list(tables),
             sql_dialect=self.db_type,
+            registry=self.registry,
         )
 
     def insert(self, table: type) -> InsertQueryBuilder:
         """Start an INSERT query."""
         assert table is not None, "Table required"
-        return InsertQueryBuilder(table, sql_dialect=self.db_type)
+        return InsertQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
 
     def update(self, table: type) -> UpdateQueryBuilder:
         """Start an UPDATE query."""
         assert table is not None, "Table required"
-        return UpdateQueryBuilder(table, sql_dialect=self.db_type)
+        return UpdateQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
 
     def delete(self, table: type) -> DeleteQueryBuilder:
         """Start a DELETE query."""
         assert table is not None, "Table required"
-        return DeleteQueryBuilder(table, sql_dialect=self.db_type)
+        return DeleteQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
 
     async def execute(self, stmt: SQLStatement) -> int:
         """Execute a statement and return affected rows."""
