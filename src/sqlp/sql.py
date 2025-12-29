@@ -297,3 +297,188 @@ class JoinBuilder:
         join = JoinClause(self.join_type, self.table, condition)
         self.parent.join_clauses.append(join)
         return self.parent
+
+
+class InsertQueryBuilder:
+    """Builds parameterized INSERT queries."""
+
+    def __init__(
+        self,
+        table: type,
+        sql_dialect: str = "postgresql",
+    ) -> None:
+        assert table is not None, "Table required"
+        self.table = table
+        self.sql_dialect = sql_dialect
+        self._values: list[dict[str, Any]] = []
+        self._compiler = ConditionCompiler(sql_dialect)
+
+    def values(self, *rows: Any) -> InsertQueryBuilder:
+        """Add one or more rows to insert."""
+        for row in rows:
+            if isinstance(row, dict):
+                row_dict = row
+            else:
+                # Assume Pydantic model
+                if hasattr(row, "model_dump"):
+                    row_dict = row.model_dump()  # type: ignore
+                else:
+                    raise TypeError(
+                        f"Expected dict or Pydantic model, got {type(row)}"
+                    )
+            
+            assert row_dict, "Row cannot be empty"
+            self._values.append(row_dict)
+        
+        return self
+
+    def build(self) -> SQLStatement:
+        """Build the INSERT statement."""
+        assert self._values, "No values to insert"
+        
+        # Get first row to extract column names (all rows should have same columns)
+        first_row = self._values[0]
+        columns = list(first_row.keys())
+        
+        # Validate all rows have same columns
+        for row in self._values[1:]:
+            assert set(row.keys()) == set(columns), (
+                "All rows must have same columns"
+            )
+        
+        table_name = self.table.__table_name__()
+        columns_str = ", ".join(columns)
+        
+        # Build placeholders for each row
+        parameters: list[Any] = []
+        value_rows: list[str] = []
+        
+        for row in self._values:
+            row_params = []
+            for col in columns:
+                param_placeholder = self._next_placeholder()
+                row_params.append(param_placeholder)
+                parameters.append(row[col])
+            
+            value_rows.append(f"({', '.join(row_params)})")
+        
+        values_str = ", ".join(value_rows)
+        sql = f"INSERT INTO {table_name} ({columns_str})\nVALUES {values_str}"
+        
+        return SQLStatement(sql, parameters)
+
+    def _next_placeholder(self) -> str:
+        """Get next parameter placeholder based on dialect."""
+        if self.sql_dialect == "postgresql":
+            self._compiler._param_counter += 1
+            return f"${self._compiler._param_counter}"
+        elif self.sql_dialect == "sqlite":
+            return "?"
+        elif self.sql_dialect == "mysql":
+            return "%s"
+        raise AssertionError("Invalid dialect")
+
+
+class UpdateQueryBuilder:
+    """Builds parameterized UPDATE queries."""
+
+    def __init__(
+        self,
+        table: type,
+        sql_dialect: str = "postgresql",
+    ) -> None:
+        assert table is not None, "Table required"
+        self.table = table
+        self.sql_dialect = sql_dialect
+        self._set_values: dict[str, Any] = {}
+        self.where_clause: WhereClause | None = None
+        self._compiler = ConditionCompiler(sql_dialect)
+
+    def set(self, **kwargs: Any) -> UpdateQueryBuilder:
+        """Set column values to update."""
+        assert kwargs, "No columns to set"
+        self._set_values.update(kwargs)
+        return self
+
+    def where(
+        self, condition: Union[ColumnCondition, CompoundCondition]
+    ) -> UpdateQueryBuilder:
+        """Add WHERE clause."""
+        assert condition is not None, "WHERE condition cannot be None"
+        self.where_clause = WhereClause(condition)
+        return self
+
+    def build(self) -> SQLStatement:
+        """Build the UPDATE statement."""
+        assert self._set_values, "No columns to update"
+        
+        table_name = self.table.__table_name__()
+        
+        # Build SET clause with placeholders
+        parameters: list[Any] = []
+        set_parts: list[str] = []
+        
+        for col_name, value in self._set_values.items():
+            param_placeholder = self._next_placeholder()
+            set_parts.append(f"{col_name} = {param_placeholder}")
+            parameters.append(value)
+        
+        set_str = ", ".join(set_parts)
+        sql = f"UPDATE {table_name}\nSET {set_str}"
+        
+        # Add WHERE clause if present
+        if self.where_clause:
+            # Need to create a new compiler for WHERE to continue placeholder count
+            where_sql = self.where_clause.to_sql(self._compiler)
+            sql += f"\n{where_sql}"
+            parameters.extend(self._compiler.parameters)
+        
+        return SQLStatement(sql, parameters)
+
+    def _next_placeholder(self) -> str:
+        """Get next parameter placeholder based on dialect."""
+        if self.sql_dialect == "postgresql":
+            self._compiler._param_counter += 1
+            return f"${self._compiler._param_counter}"
+        elif self.sql_dialect == "sqlite":
+            return "?"
+        elif self.sql_dialect == "mysql":
+            return "%s"
+        raise AssertionError("Invalid dialect")
+
+
+class DeleteQueryBuilder:
+    """Builds parameterized DELETE queries."""
+
+    def __init__(
+        self,
+        table: type,
+        sql_dialect: str = "postgresql",
+    ) -> None:
+        assert table is not None, "Table required"
+        self.table = table
+        self.sql_dialect = sql_dialect
+        self.where_clause: WhereClause | None = None
+        self._compiler = ConditionCompiler(sql_dialect)
+
+    def where(
+        self, condition: Union[ColumnCondition, CompoundCondition]
+    ) -> DeleteQueryBuilder:
+        """Add WHERE clause."""
+        assert condition is not None, "WHERE condition cannot be None"
+        self.where_clause = WhereClause(condition)
+        return self
+
+    def build(self) -> SQLStatement:
+        """Build the DELETE statement."""
+        assert self.where_clause is not None, (
+            "DELETE requires WHERE clause (safety: no unrestricted deletes)"
+        )
+        
+        table_name = self.table.__table_name__()
+        sql = f"DELETE FROM {table_name}\n"
+        
+        where_sql = self.where_clause.to_sql(self._compiler)
+        sql += where_sql
+        
+        return SQLStatement(sql, self._compiler.parameters.copy())
