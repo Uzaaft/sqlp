@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Generic, TypeVar, Union
+from typing import Any, Callable, Generic, TypeVar
 from uuid import UUID
 
 T = TypeVar("T")
@@ -219,16 +219,16 @@ class ColumnCondition:
 class CompoundCondition:
     """Represents compound SQL conditions (AND/OR)."""
 
-    conditions: list[Union[ColumnCondition, CompoundCondition]]
+    conditions: list[ColumnCondition | CompoundCondition]
     operator: str
 
-    def __and__(self, other: Union[ColumnCondition, CompoundCondition]) -> CompoundCondition:
+    def __and__(self, other: ColumnCondition | CompoundCondition) -> CompoundCondition:
         """AND operator."""
         if self.operator == "AND" and isinstance(other, ColumnCondition):
             return CompoundCondition(self.conditions + [other], "AND")
         return CompoundCondition([self, other], "AND")
 
-    def __or__(self, other: Union[ColumnCondition, CompoundCondition]) -> CompoundCondition:
+    def __or__(self, other: ColumnCondition | CompoundCondition) -> CompoundCondition:
         """OR operator."""
         if self.operator == "OR" and isinstance(other, ColumnCondition):
             return CompoundCondition(self.conditions + [other], "OR")

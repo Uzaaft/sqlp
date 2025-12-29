@@ -16,7 +16,7 @@ from sqlp.sql import (
     SQLStatement,
 )
 from sqlp.table import Table
-from sqlp.types import ColumnCondition, CompoundCondition, Union
+from sqlp.types import ColumnCondition, CompoundCondition
 from sqlp.snapshot import SchemaRegistry, load_schema_registry, should_validate_with_snapshot
 
 T = TypeVar("T")

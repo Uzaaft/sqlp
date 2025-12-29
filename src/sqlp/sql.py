@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Union
+from typing import Any
 
 from sqlp.types import ColumnCondition, ColumnRef, CompoundCondition
 
@@ -53,7 +53,7 @@ class ConditionCompiler:
             return "%s"
         raise AssertionError("Invalid dialect")
 
-    def compile(self, condition: Union[ColumnCondition, CompoundCondition]) -> str:
+    def compile(self, condition: ColumnCondition | CompoundCondition) -> str:
         """Compile a condition to SQL WHERE clause fragment."""
         if isinstance(condition, ColumnCondition):
             return self._compile_simple(condition)
@@ -121,7 +121,7 @@ class JoinClause:
 
     join_type: str  # INNER, LEFT, RIGHT, FULL
     table: type
-    on_condition: Union[ColumnCondition, CompoundCondition] | None = None
+    on_condition: ColumnCondition | CompoundCondition | None = None
 
     def to_sql(self, compiler: ConditionCompiler) -> str:
         """Generate SQL JOIN clause."""
@@ -139,7 +139,7 @@ class JoinClause:
 class WhereClause:
     """Represents a WHERE clause."""
 
-    condition: Union[ColumnCondition, CompoundCondition]
+    condition: ColumnCondition | CompoundCondition
 
     def to_sql(self, compiler: ConditionCompiler) -> str:
         """Generate SQL WHERE clause."""
@@ -227,7 +227,7 @@ class SelectQueryBuilder:
         return JoinBuilder(self, table, join_type)
 
     def where(
-        self, condition: Union[ColumnCondition, CompoundCondition]
+        self, condition: ColumnCondition | CompoundCondition
     ) -> SelectQueryBuilder:
         """Add WHERE clause."""
         assert condition is not None, "WHERE condition cannot be None"
@@ -316,7 +316,7 @@ class SelectQueryBuilder:
                     f"Column '{order_by.column_name}' not found in any selected table"
                 )
     
-    def _validate_condition(self, condition: Union[ColumnCondition, CompoundCondition]) -> None:
+    def _validate_condition(self, condition: ColumnCondition | CompoundCondition) -> None:
         """Validate a condition's columns exist in schema."""
         if isinstance(condition, ColumnCondition):
             # Check if column exists in any of the selected tables
@@ -349,7 +349,7 @@ class JoinBuilder:
         self.join_type = join_type
 
     def on(
-        self, condition: Union[ColumnCondition, CompoundCondition]
+        self, condition: ColumnCondition | CompoundCondition
     ) -> SelectQueryBuilder:
         """Complete JOIN with ON condition."""
         assert condition is not None, "ON condition cannot be None"
@@ -489,7 +489,7 @@ class UpdateQueryBuilder:
         return self
 
     def where(
-        self, condition: Union[ColumnCondition, CompoundCondition]
+        self, condition: ColumnCondition | CompoundCondition
     ) -> UpdateQueryBuilder:
         """Add WHERE clause."""
         assert condition is not None, "WHERE condition cannot be None"
@@ -537,7 +537,7 @@ class UpdateQueryBuilder:
         return SQLStatement(sql, parameters)
 
     def _validate_condition(
-        self, condition: Union[ColumnCondition, CompoundCondition], table_name: str
+        self, condition: ColumnCondition | CompoundCondition, table_name: str
     ) -> None:
         """Validate a condition's columns exist in schema."""
         if isinstance(condition, ColumnCondition):
@@ -586,7 +586,7 @@ class DeleteQueryBuilder:
                 )
 
     def where(
-        self, condition: Union[ColumnCondition, CompoundCondition]
+        self, condition: ColumnCondition | CompoundCondition
     ) -> DeleteQueryBuilder:
         """Add WHERE clause."""
         assert condition is not None, "WHERE condition cannot be None"
@@ -613,7 +613,7 @@ class DeleteQueryBuilder:
         return SQLStatement(sql, self._compiler.parameters.copy())
     
     def _validate_condition(
-        self, condition: Union[ColumnCondition, CompoundCondition], table_name: str
+        self, condition: ColumnCondition | CompoundCondition, table_name: str
     ) -> None:
         """Validate a condition's columns exist in schema."""
         if isinstance(condition, ColumnCondition):

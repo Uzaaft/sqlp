@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator, Generic, TypeVar, Union
+from typing import Any, AsyncGenerator, Generic, TypeVar
 from pydantic import BaseModel
 
 from sqlp.sql import SelectQueryBuilder, SQLStatement
