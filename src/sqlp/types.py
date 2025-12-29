@@ -6,10 +6,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable
 from uuid import UUID
-
-T = TypeVar("T")
 
 
 class TypeAdapter(ABC):
@@ -96,7 +94,7 @@ class MySQLAdapter(TypeAdapter):
 
 
 @dataclass(frozen=True)
-class Column(Generic[T]):
+class Column[T]:
     """Column metadata for table definitions.
 
     Attributes:
@@ -139,7 +137,7 @@ class Column(Generic[T]):
                 )
 
 
-class ColumnRef(Generic[T]):
+class ColumnRef[T]:
     """Type-safe column reference for query building.
 
     Used to build WHERE clauses with operator overloading.

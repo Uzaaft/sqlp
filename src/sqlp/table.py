@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, TypeVar, get_type_hints
+from typing import Any, get_type_hints
 from pydantic import BaseModel, create_model
 import inspect
 
-from sqlp.types import Column, ColumnRef, T
-
-TableT = TypeVar("TableT", bound="Table")
+from sqlp.types import Column, ColumnRef
 
 
 @dataclass

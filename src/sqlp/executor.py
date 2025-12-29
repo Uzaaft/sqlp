@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator, Generic, TypeVar
+from typing import Any, AsyncGenerator
 from pydantic import BaseModel
 
 from sqlp.sql import SelectQueryBuilder, SQLStatement
 from sqlp.table import Table
 from sqlp.pool import AsyncPool
 
-T = TypeVar("T", bound=BaseModel)
 
-
-class ExecutableQuery(Generic[T]):
+class ExecutableQuery[T: BaseModel]:
     """Wraps a query builder with execution methods."""
 
     def __init__(
