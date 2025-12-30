@@ -24,8 +24,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         cond = User.email == "test@example.com"
         sql = compiler.compile(cond)
@@ -39,8 +39,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("sqlite")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         cond = User.email == "test@example.com"
         sql = compiler.compile(cond)
@@ -54,8 +54,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            age: int = Column()
+            id = Column[int](primary_key=True)
+            age = Column[int]()
 
         # Test all comparison operators
         conditions = [
@@ -76,8 +76,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         cond = User.email.like("%@gmail.com")
         sql = compiler.compile(cond)
@@ -89,8 +89,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            status: str = Column()
+            id = Column[int](primary_key=True)
+            status = Column[str]()
 
         cond = User.status.in_(["active", "pending", "archived"])
         sql = compiler.compile(cond)
@@ -105,8 +105,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            deleted_at: datetime = Column(nullable=True)
+            id = Column[int](primary_key=True)
+            deleted_at = Column[datetime](nullable=True)
 
         cond = User.deleted_at.is_null()
         sql = compiler.compile(cond)
@@ -118,8 +118,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            deleted_at: datetime = Column(nullable=True)
+            id = Column[int](primary_key=True)
+            deleted_at = Column[datetime](nullable=True)
 
         cond = User.deleted_at.is_not_null()
         sql = compiler.compile(cond)
@@ -131,9 +131,9 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            age: int = Column()
-            status: str = Column()
+            id = Column[int](primary_key=True)
+            age = Column[int]()
+            status = Column[str]()
 
         cond = (User.age > 18) & (User.status == "active")
         sql = compiler.compile(cond)
@@ -147,8 +147,8 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            status: str = Column()
+            id = Column[int](primary_key=True)
+            status = Column[str]()
 
         cond = (User.status == "active") | (User.status == "pending")
         sql = compiler.compile(cond)
@@ -160,10 +160,10 @@ class TestConditionCompiler:
         compiler = ConditionCompiler("postgresql")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            age: int = Column()
-            status: str = Column()
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            age = Column[int]()
+            status = Column[str]()
+            email = Column[str]()
 
         cond = ((User.age > 18) & (User.status == "active")) | (
             User.email.like("%@admin.com")
@@ -183,8 +183,8 @@ class TestSelectClause:
 
     def test_single_table_select_all(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         select = SelectClause([User])
         sql = select.to_sql()
@@ -194,12 +194,12 @@ class TestSelectClause:
 
     def test_multiple_table_select(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
 
         select = SelectClause([User, Post])
         sql = select.to_sql()
@@ -208,8 +208,8 @@ class TestSelectClause:
 
     def test_select_specific_columns(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         select = SelectClause([User], columns=["id", "email"])
         sql = select.to_sql()
@@ -222,8 +222,8 @@ class TestSelectQueryBuilder:
 
     def test_simple_select(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = SelectQueryBuilder([User])
         stmt = builder.build()
@@ -233,8 +233,8 @@ class TestSelectQueryBuilder:
 
     def test_select_with_where(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = SelectQueryBuilder([User])
         builder.where(User.email == "test@example.com")
@@ -245,9 +245,9 @@ class TestSelectQueryBuilder:
 
     def test_select_with_and_condition(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            age: int = Column()
-            status: str = Column()
+            id = Column[int](primary_key=True)
+            age = Column[int]()
+            status = Column[str]()
 
         builder = SelectQueryBuilder([User])
         builder.where((User.age > 18) & (User.status == "active"))
@@ -258,7 +258,7 @@ class TestSelectQueryBuilder:
 
     def test_select_with_limit(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = SelectQueryBuilder([User])
         builder.limit(10)
@@ -268,7 +268,7 @@ class TestSelectQueryBuilder:
 
     def test_select_with_offset(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = SelectQueryBuilder([User])
         builder.limit(10).offset(20)
@@ -279,8 +279,8 @@ class TestSelectQueryBuilder:
 
     def test_select_with_order_by(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = SelectQueryBuilder([User])
         builder.order_by("email")
@@ -290,8 +290,8 @@ class TestSelectQueryBuilder:
 
     def test_select_with_order_by_desc(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            created_at: datetime = Column()
+            id = Column[int](primary_key=True)
+            created_at = Column[datetime]()
 
         builder = SelectQueryBuilder([User])
         builder.order_by("created_at", "DESC")
@@ -301,9 +301,9 @@ class TestSelectQueryBuilder:
 
     def test_select_with_multiple_order_by(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
-            created_at: datetime = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
+            created_at = Column[datetime]()
 
         builder = SelectQueryBuilder([User])
         builder.order_by("email").order_by("created_at", "DESC")
@@ -314,13 +314,13 @@ class TestSelectQueryBuilder:
 
     def test_select_with_join(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
-            title: str = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
+            title = Column[str]()
 
         builder = SelectQueryBuilder([User])
         builder.join(Post).on(Post.user_id == User.id)
@@ -333,11 +333,11 @@ class TestSelectQueryBuilder:
 
     def test_select_with_left_join(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
 
         builder = SelectQueryBuilder([User])
         builder.join(Post, join_type="LEFT").on(Post.user_id == User.id)
@@ -347,15 +347,15 @@ class TestSelectQueryBuilder:
 
     def test_select_with_multiple_joins(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
 
         class Comment(Table):
-            id: int = Column(primary_key=True)
-            post_id: int = Column()
+            id = Column[int](primary_key=True)
+            post_id = Column[int]()
 
         builder = SelectQueryBuilder([User])
         builder.join(Post).on(Post.user_id == User.id)
@@ -367,13 +367,13 @@ class TestSelectQueryBuilder:
 
     def test_fluent_chain(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            age: int = Column()
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            age = Column[int]()
+            email = Column[str]()
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
 
         builder = SelectQueryBuilder([User])
         stmt = (
@@ -394,8 +394,8 @@ class TestSelectQueryBuilder:
 
     def test_select_sqlite_dialect(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = SelectQueryBuilder([User], sql_dialect="sqlite")
         builder.where(User.email == "test@example.com")
@@ -407,8 +407,8 @@ class TestSelectQueryBuilder:
 
     def test_select_mysql_dialect(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = SelectQueryBuilder([User], sql_dialect="mysql")
         builder.where(User.email == "test@example.com")
@@ -420,7 +420,7 @@ class TestSelectQueryBuilder:
 
     def test_limit_validation(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = SelectQueryBuilder([User])
         with pytest.raises(AssertionError):
@@ -431,7 +431,7 @@ class TestSelectQueryBuilder:
 
     def test_offset_validation(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = SelectQueryBuilder([User])
         with pytest.raises(AssertionError):
@@ -439,7 +439,7 @@ class TestSelectQueryBuilder:
 
     def test_order_by_invalid_direction(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = SelectQueryBuilder([User])
         with pytest.raises(AssertionError):

@@ -42,9 +42,13 @@ class Table:
     
     Usage:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column(unique=True)
-            name: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str](unique=True)
+            name = Column[str]()
+        
+        # Type-safe column access (both styles work):
+        User.id == 1           # ColumnRef[int]
+        User.email.like("foo") # ColumnRef[str]
     """
 
     __table_metadata__: TableMetadata
@@ -53,38 +57,23 @@ class Table:
         """Extract table metadata from class definition."""
         super().__init_subclass__(**kwargs)
         
-        # Get type hints for the class
-        hints = get_type_hints(cls)
-        
-        # Extract Column definitions
+        # Extract Column definitions from class dict
+        # We don't use type hints because Column type comes from Column[T] generic parameter
         columns: dict[str, Column] = {}
-        for name, col_type in hints.items():
-            # Skip private/magic attributes
-            if name.startswith("_"):
+        for name, value in cls.__dict__.items():
+            # Skip private/magic attributes and methods
+            if name.startswith("_") or callable(value):
                 continue
             
-            # Get the Column instance from class dict
-            col_value = getattr(cls, name, None)
-            if isinstance(col_value, Column):
-                # Infer python_type from annotation if not set
-                if col_value.python_type is None:
-                    col_with_type = Column(
-                        python_type=col_type,
-                        primary_key=col_value.primary_key,
-                        unique=col_value.unique,
-                        nullable=col_value.nullable,
-                        default=col_value.default,
-                        default_factory=col_value.default_factory,
+            # Check if this is a Column instance
+            if isinstance(value, Column):
+                # Type must be set via Column[T] syntax
+                if value.python_type is None:
+                    raise ValueError(
+                        f"Column '{name}' in {cls.__name__} must specify type: "
+                        f"use Column[<type>](...)  instead of Column(...)"
                     )
-                    columns[name] = col_with_type
-                else:
-                    columns[name] = col_value
-            else:
-                # If no Column() was set, this is still a column but not explicitly defined
-                # This shouldn't happen in our usage pattern
-                raise ValueError(
-                    f"Column '{name}' in {cls.__name__} must be assigned a Column() instance"
-                )
+                columns[name] = value
         
         assert columns, f"Table {cls.__name__} must define at least one column"
         
@@ -97,6 +86,7 @@ class Table:
         # Generate Pydantic model for row results
         field_definitions: dict[str, Any] = {}
         for col_name, col in columns.items():
+            assert col.python_type is not None, f"Column {col_name} must have python_type set"
             if col.nullable:
                 field_definitions[col_name] = (col.python_type | None, None)
             else:
@@ -112,8 +102,9 @@ class Table:
         # Store metadata on class
         cls.__table_metadata__ = metadata
         
-        # Add column refs as class attributes for type-safe queries
+        # Create ColumnRef instances as class attributes for type-safe queries
         for col_name, col in columns.items():
+            assert col.python_type is not None, f"Column {col_name} must have python_type set"
             setattr(cls, col_name, ColumnRef(col_name, col.python_type))
 
     @classmethod

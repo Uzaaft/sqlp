@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator
+from typing import TYPE_CHECKING, Any, AsyncGenerator, cast
 from pydantic import BaseModel
 
 from sqlp.sql import SelectQueryBuilder, SQLStatement
-from sqlp.table import Table
 from sqlp.pool import AsyncPool
+
+if TYPE_CHECKING:
+    from sqlp.table import Table
 
 
 class ExecutableQuery[T: BaseModel]:
@@ -17,7 +19,7 @@ class ExecutableQuery[T: BaseModel]:
         self,
         builder: SelectQueryBuilder,
         pool: AsyncPool,
-        table: type,
+        table: type[Table],
     ) -> None:
         assert builder is not None, "Builder cannot be None"
         assert pool is not None, "Pool cannot be None"
@@ -25,7 +27,7 @@ class ExecutableQuery[T: BaseModel]:
         
         self.builder = builder
         self.pool = pool
-        self.table = table
+        self.table: type[Table] = table
 
     async def first(self) -> T | None:
         """Fetch first result row and map to table model."""
@@ -35,7 +37,8 @@ class ExecutableQuery[T: BaseModel]:
         if row is None:
             return None
         
-        model = self.table.__row_model__()
+        model_cls = self.table.__row_model__()
+        model = cast(type[T], model_cls)
         return model(**row)
 
     async def all(self) -> list[T]:
@@ -43,7 +46,8 @@ class ExecutableQuery[T: BaseModel]:
         stmt = self.builder.build()
         rows = await self.pool.fetch_all(stmt)
         
-        model = self.table.__row_model__()
+        model_cls = self.table.__row_model__()
+        model = cast(type[T], model_cls)
         return [model(**row) for row in rows]
 
     async def count(self) -> int:
@@ -62,8 +66,7 @@ class ExecutableQuery[T: BaseModel]:
 
     async def __aiter__(self) -> AsyncGenerator[T, None]:
         """Async iteration over results."""
-        rows = await self.all()
-        for row in rows:
+        for row in await self.all():
             yield row
 
 
@@ -90,7 +93,7 @@ class ExecutableMutation:
 def attach_execution(
     builder: SelectQueryBuilder,
     pool: AsyncPool,
-    table: type,
+    table: type[Table],
 ) -> ExecutableQuery:
     """Attach async execution methods to a query builder."""
     return ExecutableQuery(builder, pool, table)
