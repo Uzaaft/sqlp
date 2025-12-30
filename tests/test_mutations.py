@@ -13,9 +13,9 @@ class TestInsertQueryBuilder:
 
     def test_simple_insert(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
-            name: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
+            name = Column[str]()
 
         builder = InsertQueryBuilder(User)
         builder.values({"id": 1, "email": "test@example.com", "name": "Alice"})
@@ -28,8 +28,8 @@ class TestInsertQueryBuilder:
 
     def test_insert_multiple_rows(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = InsertQueryBuilder(User)
         builder.values(
@@ -44,8 +44,8 @@ class TestInsertQueryBuilder:
 
     def test_insert_with_pydantic_model(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         # Create instance using row model
         user_model = User.__row_model__()
@@ -60,8 +60,8 @@ class TestInsertQueryBuilder:
 
     def test_insert_inconsistent_columns_error(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = InsertQueryBuilder(User)
         with pytest.raises(AssertionError):
@@ -73,7 +73,7 @@ class TestInsertQueryBuilder:
 
     def test_insert_empty_error(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = InsertQueryBuilder(User)
         with pytest.raises(AssertionError):
@@ -81,8 +81,8 @@ class TestInsertQueryBuilder:
 
     def test_insert_sqlite_dialect(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = InsertQueryBuilder(User, sql_dialect="sqlite")
         builder.values({"id": 1, "email": "test@example.com"})
@@ -92,8 +92,8 @@ class TestInsertQueryBuilder:
 
     def test_insert_mysql_dialect(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = InsertQueryBuilder(User, sql_dialect="mysql")
         builder.values({"id": 1, "email": "test@example.com"})
@@ -103,7 +103,7 @@ class TestInsertQueryBuilder:
 
     def test_insert_invalid_type_error(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = InsertQueryBuilder(User)
         with pytest.raises(TypeError):
@@ -115,9 +115,9 @@ class TestUpdateQueryBuilder:
 
     def test_simple_update(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
-            name: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
+            name = Column[str]()
 
         builder = UpdateQueryBuilder(User)
         builder.set(email="newemail@example.com", name="Bob")
@@ -133,8 +133,8 @@ class TestUpdateQueryBuilder:
 
     def test_update_single_column(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = UpdateQueryBuilder(User)
         builder.set(email="new@example.com")
@@ -146,8 +146,8 @@ class TestUpdateQueryBuilder:
 
     def test_update_no_where_clause(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = UpdateQueryBuilder(User)
         builder.set(email="new@example.com")
@@ -159,8 +159,8 @@ class TestUpdateQueryBuilder:
 
     def test_update_with_condition(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            status: str = Column()
+            id = Column[int](primary_key=True)
+            status = Column[str]()
 
         builder = UpdateQueryBuilder(User)
         builder.set(status="inactive")
@@ -172,9 +172,9 @@ class TestUpdateQueryBuilder:
 
     def test_update_fluent_chain(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
-            age: int = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
+            age = Column[int]()
 
         stmt = (
             UpdateQueryBuilder(User)
@@ -189,7 +189,7 @@ class TestUpdateQueryBuilder:
 
     def test_update_no_set_error(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = UpdateQueryBuilder(User)
         with pytest.raises(AssertionError):
@@ -197,7 +197,7 @@ class TestUpdateQueryBuilder:
 
     def test_update_empty_set_error(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = UpdateQueryBuilder(User)
         builder.set(id=1)
@@ -210,8 +210,8 @@ class TestDeleteQueryBuilder:
 
     def test_simple_delete(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = DeleteQueryBuilder(User)
         builder.where(User.id == 1)
@@ -223,9 +223,9 @@ class TestDeleteQueryBuilder:
 
     def test_delete_with_complex_condition(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            status: str = Column()
-            age: int = Column()
+            id = Column[int](primary_key=True)
+            status = Column[str]()
+            age = Column[int]()
 
         builder = DeleteQueryBuilder(User)
         builder.where((User.status == "inactive") & (User.age > 100))
@@ -237,7 +237,7 @@ class TestDeleteQueryBuilder:
 
     def test_delete_no_where_error(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = DeleteQueryBuilder(User)
         with pytest.raises(AssertionError, match="safety"):
@@ -245,7 +245,7 @@ class TestDeleteQueryBuilder:
 
     def test_delete_with_in_clause(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = DeleteQueryBuilder(User)
         builder.where(User.id.in_([1, 2, 3]))
@@ -257,8 +257,8 @@ class TestDeleteQueryBuilder:
 
     def test_delete_with_like(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = DeleteQueryBuilder(User)
         builder.where(User.email.like("%@oldomain.com"))
@@ -269,8 +269,8 @@ class TestDeleteQueryBuilder:
 
     def test_delete_fluent_chain(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            status: str = Column()
+            id = Column[int](primary_key=True)
+            status = Column[str]()
 
         stmt = (
             DeleteQueryBuilder(User)
@@ -283,7 +283,7 @@ class TestDeleteQueryBuilder:
 
     def test_delete_sqlite_dialect(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = DeleteQueryBuilder(User, sql_dialect="sqlite")
         builder.where(User.id == 1)
@@ -293,7 +293,7 @@ class TestDeleteQueryBuilder:
 
     def test_delete_mysql_dialect(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         builder = DeleteQueryBuilder(User, sql_dialect="mysql")
         builder.where(User.id == 1)
@@ -307,9 +307,9 @@ class TestMutationIntegration:
 
     def test_insert_then_update_schema(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
-            verified: bool = Column(default=False)
+            id = Column[int](primary_key=True)
+            email = Column[str]()
+            verified = Column[bool](default=False)
 
         # Insert
         insert_stmt = InsertQueryBuilder(User).values(

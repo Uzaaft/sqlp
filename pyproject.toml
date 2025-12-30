@@ -24,7 +24,18 @@ dev = [
     "pytest-asyncio>=0.23",
     "mypy>=1.8",
     "ruff>=0.3",
+    "basedpyright>=1.1.0",
+    "ty>=0.0.8",
 ]
 
 [tool.sqlp]
 schema_snapshot_path = ".sqlp/schema.json"
+
+[tool.basedpyright]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+include = ["src"]
+exclude = [".venv", "dist", ".pytest_cache"]
+reportMissingTypeStubs = false
+reportUnknownParameterType = false
+reportUnknownMemberType = false

@@ -63,8 +63,8 @@ class TestAsyncPoolQueryBuilders:
         pool = AsyncPool("sqlite://:memory:")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = pool.select(User)
         assert builder is not None
@@ -74,8 +74,8 @@ class TestAsyncPoolQueryBuilders:
         pool = AsyncPool("postgresql://localhost/mydb")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = pool.insert(User)
         assert builder is not None
@@ -85,8 +85,8 @@ class TestAsyncPoolQueryBuilders:
         pool = AsyncPool("mysql://localhost/mydb")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = pool.update(User)
         assert builder is not None
@@ -96,8 +96,8 @@ class TestAsyncPoolQueryBuilders:
         pool = AsyncPool("sqlite://:memory:")
         
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         builder = pool.delete(User)
         assert builder is not None
@@ -107,11 +107,11 @@ class TestAsyncPoolQueryBuilders:
         pool = AsyncPool("postgresql://localhost/mydb")
         
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
 
         builder = pool.select(User, Post)
         assert len(builder.tables) == 2
@@ -129,9 +129,9 @@ class TestAsyncPoolSQLiteIntegration:
 
         try:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                name: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                name = Column[str]()
 
             # Create table
             create_sql = """
@@ -173,8 +173,8 @@ class TestAsyncPoolSQLiteIntegration:
 
         try:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Create and insert
             create_sql = """
@@ -214,9 +214,9 @@ class TestAsyncPoolSQLiteIntegration:
 
         try:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                status: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                status = Column[str]()
 
             # Create and insert
             create_sql = """
@@ -259,8 +259,8 @@ class TestAsyncPoolSQLiteIntegration:
 
         try:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Create and insert
             create_sql = """
@@ -301,8 +301,8 @@ class TestAsyncPoolSQLiteIntegration:
     async def test_sqlite_context_manager(self) -> None:
         """Test AsyncPool as context manager."""
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         # Use context manager
         async with AsyncPool("sqlite://:memory:") as pool:

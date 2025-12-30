@@ -52,8 +52,8 @@ class TestSchemaSnapshot:
 
     def test_snapshot_from_tables(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         assert "user" in snapshot.tables
@@ -62,13 +62,13 @@ class TestSchemaSnapshot:
 
     def test_snapshot_from_multiple_tables(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
-            title: str = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
+            title = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User, Post)
         assert "user" in snapshot.tables
@@ -76,8 +76,8 @@ class TestSchemaSnapshot:
 
     def test_snapshot_to_json(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         json_str = snapshot.to_json()
@@ -89,9 +89,9 @@ class TestSchemaSnapshot:
 
     def test_snapshot_roundtrip(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column(unique=True)
-            bio: str = Column(nullable=True)
+            id = Column[int](primary_key=True)
+            email = Column[str](unique=True)
+            bio = Column[str](nullable=True)
 
         snapshot1 = SchemaSnapshot.from_tables(User)
         json_str = snapshot1.to_json()
@@ -106,8 +106,8 @@ class TestSchemaSnapshot:
 
     def test_snapshot_to_file(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
 
@@ -118,8 +118,8 @@ class TestSchemaSnapshot:
 
     def test_snapshot_from_file(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot1 = SchemaSnapshot.from_tables(User)
 
@@ -136,8 +136,8 @@ class TestSchemaRegistry:
 
     def test_registry_get_table(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -147,7 +147,7 @@ class TestSchemaRegistry:
 
     def test_registry_table_exists(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -157,8 +157,8 @@ class TestSchemaRegistry:
 
     def test_registry_column_exists(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -170,8 +170,8 @@ class TestSchemaRegistry:
 
     def test_registry_get_column(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column(unique=True)
+            id = Column[int](primary_key=True)
+            email = Column[str](unique=True)
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -182,8 +182,8 @@ class TestSchemaRegistry:
 
     def test_registry_get_primary_key(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -193,7 +193,7 @@ class TestSchemaRegistry:
 
     def test_registry_from_snapshot_file(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         snapshot = SchemaSnapshot.from_tables(User)
 
@@ -206,7 +206,7 @@ class TestSchemaRegistry:
 
     def test_registry_get_table_not_found(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -216,7 +216,7 @@ class TestSchemaRegistry:
 
     def test_registry_get_column_not_found(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -230,8 +230,8 @@ class TestOfflineValidation:
 
     def test_select_builder_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -243,11 +243,11 @@ class TestOfflineValidation:
 
     def test_select_builder_invalid_table_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            title: str = Column()
+            id = Column[int](primary_key=True)
+            title = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)  # Only User
         registry = SchemaRegistry(snapshot)
@@ -258,8 +258,8 @@ class TestOfflineValidation:
 
     def test_select_builder_invalid_column_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -276,8 +276,8 @@ class TestOfflineValidation:
 
     def test_insert_builder_invalid_column_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -290,8 +290,8 @@ class TestOfflineValidation:
 
     def test_update_builder_invalid_column_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -307,8 +307,8 @@ class TestOfflineValidation:
 
     def test_delete_builder_invalid_column_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)
@@ -324,8 +324,8 @@ class TestOfflineValidation:
 
     def test_order_by_invalid_column_with_registry(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         snapshot = SchemaSnapshot.from_tables(User)
         registry = SchemaRegistry(snapshot)

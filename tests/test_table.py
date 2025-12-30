@@ -36,8 +36,8 @@ class TestTableDefinition:
 
     def test_simple_table_definition(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column(unique=True)
+            id = Column[int](primary_key=True)
+            email = Column[str](unique=True)
 
         assert User.__table_name__() == "user"
         columns = User.__columns__()
@@ -48,8 +48,8 @@ class TestTableDefinition:
 
     def test_column_access_in_table(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         # Columns should be accessible as ColumnRef for type-safe queries
         assert isinstance(User.id, ColumnRef)
@@ -59,56 +59,56 @@ class TestTableDefinition:
 
     def test_table_with_nullable_columns(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            bio: str = Column(nullable=True)
+            id = Column[int](primary_key=True)
+            bio = Column[str](nullable=True)
 
         columns = User.__columns__()
         assert columns["bio"].nullable is True
 
     def test_table_with_defaults(self) -> None:
         class Post(Table):
-            id: int = Column(primary_key=True)
-            title: str = Column()
-            created_at: datetime = Column(default_factory=datetime.now)
+            id = Column[int](primary_key=True)
+            title = Column[str]()
+            created_at = Column[datetime](default_factory=datetime.now)
 
         columns = Post.__columns__()
         assert columns["created_at"].default_factory is not None
 
     def test_primary_key_detection(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            name: str = Column()
+            id = Column[int](primary_key=True)
+            name = Column[str]()
 
         assert User.__primary_key__() == "id"
 
     def test_no_primary_key(self) -> None:
         class Log(Table):
-            message: str = Column()
-            level: str = Column()
+            message = Column[str]()
+            level = Column[str]()
 
         assert Log.__primary_key__() is None
 
     def test_row_model_generation(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
-            age: int = Column(nullable=True)
+            id = Column[int](primary_key=True)
+            email = Column[str]()
+            age = Column[int | None](nullable=True)
 
         model = User.__row_model__()
         
         # Should be able to instantiate with valid data
         user_data = {"id": 1, "email": "test@example.com", "age": None}
         user = model(**user_data)
-        assert user.id == 1
-        assert user.email == "test@example.com"
-        assert user.age is None
+        assert user.id == 1  # type: ignore[attr-defined]
+        assert user.email == "test@example.com"  # type: ignore[attr-defined]
+        assert user.age is None  # type: ignore[attr-defined]
 
     def test_row_model_validation(self) -> None:
         from pydantic import ValidationError
 
         class User(Table):
-            id: int = Column(primary_key=True)
-            email: str = Column()
+            id = Column[int](primary_key=True)
+            email = Column[str]()
 
         model = User.__row_model__()
         
@@ -120,8 +120,8 @@ class TestTableDefinition:
         from pydantic import ValidationError
 
         class User(Table):
-            id: int = Column(primary_key=True)
-            bio: str = Column(nullable=False)
+            id = Column[int](primary_key=True)
+            bio = Column[str](nullable=False)
 
         model = User.__row_model__()
         
@@ -131,13 +131,13 @@ class TestTableDefinition:
 
     def test_multiple_tables_independent(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
-            name: str = Column()
+            id = Column[int](primary_key=True)
+            name = Column[str]()
 
         class Post(Table):
-            id: int = Column(primary_key=True)
-            user_id: int = Column()
-            title: str = Column()
+            id = Column[int](primary_key=True)
+            user_id = Column[int]()
+            title = Column[str]()
 
         assert User.__table_name__() == "user"
         assert Post.__table_name__() == "post"
@@ -146,22 +146,22 @@ class TestTableDefinition:
 
     def test_column_refs_are_independent(self) -> None:
         class User(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         class Post(Table):
-            id: int = Column(primary_key=True)
+            id = Column[int](primary_key=True)
 
         # Each table should have its own ColumnRef instances
         assert User.id is not Post.id
-        assert User.id.column_name == "id"
-        assert Post.id.column_name == "id"
+        assert User.id.column_name == "id"  # type: ignore[attr-defined]
+        assert Post.id.column_name == "id"  # type: ignore[attr-defined]
 
 
 class TestTableMetadata:
     """Test TableMetadata class."""
 
     def test_metadata_creation(self) -> None:
-        columns = {
+        columns: dict[str, Column] = {
             "id": Column(int, primary_key=True),
             "name": Column(str),
         }
@@ -171,7 +171,7 @@ class TestTableMetadata:
         assert meta.primary_key == "id"
 
     def test_get_column(self) -> None:
-        columns = {
+        columns: dict[str, Column] = {
             "id": Column(int, primary_key=True),
             "email": Column(str, unique=True),
         }
@@ -181,14 +181,14 @@ class TestTableMetadata:
         assert col.unique is True
 
     def test_get_nonexistent_column(self) -> None:
-        columns = {"id": Column(int, primary_key=True)}
+        columns: dict[str, Column] = {"id": Column(int, primary_key=True)}
         meta = TableMetadata(name="users", columns=columns)
         
         with pytest.raises(KeyError):
             meta.get_column("nonexistent")
 
     def test_multiple_primary_keys_error(self) -> None:
-        columns = {
+        columns: dict[str, Column] = {
             "id1": Column(int, primary_key=True),
             "id2": Column(int, primary_key=True),
         }
@@ -200,6 +200,6 @@ class TestTableMetadata:
             TableMetadata(name="users", columns={})
 
     def test_empty_name_error(self) -> None:
-        columns = {"id": Column(int)}
+        columns: dict[str, Column] = {"id": Column(int)}
         with pytest.raises(AssertionError):
             TableMetadata(name="", columns=columns)

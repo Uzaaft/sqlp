@@ -16,9 +16,9 @@ class TestAsyncExecution:
         """Test .first() returns single row as model instance."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                name: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                name = Column[str]()
 
             # Setup
             create_sql = """
@@ -54,8 +54,8 @@ class TestAsyncExecution:
         """Test .first() with WHERE condition."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -89,8 +89,8 @@ class TestAsyncExecution:
         """Test .first() returns None when no results."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -114,8 +114,8 @@ class TestAsyncExecution:
         """Test .all() returns list of model instances."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -149,8 +149,8 @@ class TestAsyncExecution:
         """Test .all() respects LIMIT clause."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -180,8 +180,8 @@ class TestAsyncExecution:
         """Test .count() returns row count."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -210,8 +210,8 @@ class TestAsyncExecution:
         """Test .count() with WHERE condition."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                status: str = Column()
+                id = Column[int](primary_key=True)
+                status = Column[str]()
 
             # Setup
             create_sql = """
@@ -248,8 +248,8 @@ class TestAsyncExecution:
         """Test async iteration over results."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -282,9 +282,9 @@ class TestAsyncExecution:
         """Test result mapping handles NULL values correctly."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                bio: str = Column(nullable=True)
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                bio = Column[str](nullable=True)
 
             # Setup
             create_sql = """
@@ -322,8 +322,8 @@ class TestMutationExecution:
         """Test INSERT execution."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """
@@ -348,9 +348,9 @@ class TestMutationExecution:
         """Test UPDATE execution."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                status: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                status = Column[str]()
 
             # Setup
             create_sql = """
@@ -380,8 +380,8 @@ class TestMutationExecution:
         """Test DELETE execution."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Setup
             create_sql = """

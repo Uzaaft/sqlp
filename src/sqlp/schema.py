@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlp.pool import AsyncPool
-from sqlp.table import Table
 from sqlp.types import Column, PostgreSQLAdapter, SQLiteAdapter, MySQLAdapter
+
+if TYPE_CHECKING:
+    from sqlp.table import Table
 
 
 @dataclass
@@ -38,7 +40,7 @@ class SchemaValidator:
             return MySQLAdapter()
         raise ValueError(f"Unsupported database type: {self.pool.db_type}")
 
-    async def validate_schema(self, *tables: type) -> None:
+    async def validate_schema(self, *tables: type[Table]) -> None:
         """Validate that all tables match the database schema.
 
         Raises AssertionError if any mismatches are found.
@@ -48,7 +50,7 @@ class SchemaValidator:
         for table in tables:
             await self._validate_table(table)
 
-    async def _validate_table(self, table: type) -> None:
+    async def _validate_table(self, table: type[Table]) -> None:
         """Validate a single table."""
         table_name = table.__table_name__()
         expected_columns = table.__columns__()
@@ -222,7 +224,7 @@ class SchemaValidator:
         return columns
 
 
-async def validate_schema(pool: AsyncPool, *tables: type) -> None:
+async def validate_schema(pool: AsyncPool, *tables: type[Table]) -> None:
     """Validate database schema against Table definitions.
     
     Args:

@@ -16,8 +16,8 @@ class TestSchemaValidation:
         """Test validation passes for matching schema."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Create matching schema
             create_sql = """
@@ -37,9 +37,9 @@ class TestSchemaValidation:
         """Test validation fails when column is missing from database."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                bio: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                bio = Column[str]()
 
             # Create schema without 'bio' column
             create_sql = """
@@ -60,8 +60,8 @@ class TestSchemaValidation:
         """Test validation fails for unexpected columns in database."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             # Create schema with extra column
             create_sql = """
@@ -83,9 +83,9 @@ class TestSchemaValidation:
         """Test validation fails for type mismatch."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
-                age: int = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
+                age = Column[int]()
 
             # Create schema with wrong type for 'age'
             create_sql = """
@@ -107,8 +107,8 @@ class TestSchemaValidation:
         """Test validation fails when nullability doesn't match."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column(nullable=False)
+                id = Column[int](primary_key=True)
+                email = Column[str](nullable=False)
 
             # Create schema with nullable column
             create_sql = """
@@ -129,8 +129,8 @@ class TestSchemaValidation:
         """Test validation fails when primary key doesn't match."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column()  # Not a primary key
-                email: str = Column(primary_key=True)
+                id = Column[int]()  # Not a primary key
+                email = Column[str](primary_key=True)
 
             # Create schema with different primary key
             create_sql = """
@@ -151,8 +151,8 @@ class TestSchemaValidation:
         """Test validation passes for nullable columns."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                bio: str = Column(nullable=True)
+                id = Column[int](primary_key=True)
+                bio = Column[str](nullable=True)
 
             # Create matching schema
             create_sql = """
@@ -172,13 +172,13 @@ class TestSchemaValidation:
         """Test validation of multiple tables."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
-                email: str = Column()
+                id = Column[int](primary_key=True)
+                email = Column[str]()
 
             class Post(Table):
-                id: int = Column(primary_key=True)
-                user_id: int = Column()
-                title: str = Column()
+                id = Column[int](primary_key=True)
+                user_id = Column[int]()
+                title = Column[str]()
 
             # Create both schemas
             user_sql = """
@@ -221,7 +221,7 @@ class TestSchemaValidation:
         """Test validation fails when table doesn't exist in database."""
         async with AsyncPool("sqlite://:memory:") as pool:
             class User(Table):
-                id: int = Column(primary_key=True)
+                id = Column[int](primary_key=True)
 
             # Don't create any tables
             

@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlp.types import ColumnCondition, ColumnRef, CompoundCondition
+
+if TYPE_CHECKING:
+    from sqlp.table import Table
 
 
 @dataclass
@@ -96,7 +99,7 @@ class ConditionCompiler:
 class SelectClause:
     """Represents the SELECT clause of a query."""
 
-    tables: list[type]
+    tables: list[type[Table]]
     columns: list[str] | None = None  # None means SELECT *
 
     def to_sql(self) -> str:
@@ -120,7 +123,7 @@ class JoinClause:
     """Represents a JOIN clause."""
 
     join_type: str  # INNER, LEFT, RIGHT, FULL
-    table: type
+    table: type[Table]
     on_condition: ColumnCondition | CompoundCondition | None = None
 
     def to_sql(self, compiler: ConditionCompiler) -> str:
@@ -191,12 +194,12 @@ class SelectQueryBuilder:
 
     def __init__(
         self,
-        tables: list[type],
+        tables: list[type[Table]],
         sql_dialect: str = "postgresql",
         registry: Any = None,
     ) -> None:
         assert tables, "At least one table required"
-        self.tables = tables
+        self.tables: list[type[Table]] = tables
         self.sql_dialect = sql_dialect
         self.registry = registry
         self.join_clauses: list[JoinClause] = []
@@ -217,7 +220,7 @@ class SelectQueryBuilder:
 
     def join(
         self,
-        table: type,
+        table: type[Table],
         join_type: str = "INNER",
     ) -> JoinBuilder:
         """Start a JOIN clause with ON condition builder."""
@@ -341,7 +344,7 @@ class JoinBuilder:
     def __init__(
         self,
         parent: SelectQueryBuilder,
-        table: type,
+        table: type[Table],
         join_type: str,
     ) -> None:
         self.parent = parent
@@ -363,12 +366,12 @@ class InsertQueryBuilder:
 
     def __init__(
         self,
-        table: type,
+        table: type[Table],
         sql_dialect: str = "postgresql",
         registry: Any = None,
     ) -> None:
         assert table is not None, "Table required"
-        self.table = table
+        self.table: type[Table] = table
         self.sql_dialect = sql_dialect
         self.registry = registry
         self._values: list[dict[str, Any]] = []
@@ -462,12 +465,12 @@ class UpdateQueryBuilder:
 
     def __init__(
         self,
-        table: type,
+        table: type[Table],
         sql_dialect: str = "postgresql",
         registry: Any = None,
     ) -> None:
         assert table is not None, "Table required"
-        self.table = table
+        self.table: type[Table] = table
         self.sql_dialect = sql_dialect
         self.registry = registry
         self._set_values: dict[str, Any] = {}
@@ -566,12 +569,12 @@ class DeleteQueryBuilder:
 
     def __init__(
         self,
-        table: type,
+        table: type[Table],
         sql_dialect: str = "postgresql",
         registry: Any = None,
     ) -> None:
         assert table is not None, "Table required"
-        self.table = table
+        self.table: type[Table] = table
         self.sql_dialect = sql_dialect
         self.registry = registry
         self.where_clause: WhereClause | None = None

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Any, AsyncGenerator
 from urllib.parse import urlparse
 
@@ -56,13 +56,9 @@ class PostgreSQLConnection(AsyncConnection):
         """Execute statement and return affected row count."""
         result = await self._conn.execute(sql, *parameters)
         # asyncpg returns string like "DELETE 5", extract count
-        if isinstance(result, str):
-            parts = result.split()
-            if parts:
-                try:
-                    return int(parts[-1])
-                except ValueError:
-                    pass
+        if isinstance(result, str) and (parts := result.split()):
+            with suppress(ValueError):
+                return int(parts[-1])
         return 0
 
     async def fetch_one(self, sql: str, parameters: list[Any]) -> dict[str, Any] | None:
@@ -192,7 +188,7 @@ class AsyncPool:
         
         # Use provided registry, or load from config if env var says to use snapshot
         if registry is not None:
-            self.registry = registry
+            self.registry: SchemaRegistry | None = registry
         elif should_validate_with_snapshot():
             self.registry = load_schema_registry()
         else:
@@ -312,7 +308,7 @@ class AsyncPool:
                 # SQLite/MySQL handle transactions at cursor level
                 yield
 
-    def select(self, *tables: type) -> SelectQueryBuilder:
+    def select(self, *tables: type[Table]) -> SelectQueryBuilder:
         """Start a SELECT query."""
         assert tables, "At least one table required"
         return SelectQueryBuilder(
@@ -321,17 +317,17 @@ class AsyncPool:
             registry=self.registry,
         )
 
-    def insert(self, table: type) -> InsertQueryBuilder:
+    def insert(self, table: type[Table]) -> InsertQueryBuilder:
         """Start an INSERT query."""
         assert table is not None, "Table required"
         return InsertQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
 
-    def update(self, table: type) -> UpdateQueryBuilder:
+    def update(self, table: type[Table]) -> UpdateQueryBuilder:
         """Start an UPDATE query."""
         assert table is not None, "Table required"
         return UpdateQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
 
-    def delete(self, table: type) -> DeleteQueryBuilder:
+    def delete(self, table: type[Table]) -> DeleteQueryBuilder:
         """Start a DELETE query."""
         assert table is not None, "Table required"
         return DeleteQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
