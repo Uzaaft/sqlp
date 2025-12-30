@@ -7,11 +7,6 @@ from sqlp.sql import (
     SelectQueryBuilder,
     ConditionCompiler,
     SelectClause,
-    JoinClause,
-    WhereClause,
-    OrderByClause,
-    LimitClause,
-    OffsetClause,
 )
 from sqlp.table import Table
 from sqlp.types import Column
@@ -22,14 +17,14 @@ class TestConditionCompiler:
 
     def test_simple_equality_postgresql(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
 
         cond = User.email == "test@example.com"
         sql = compiler.compile(cond)
-        
+
         assert "email" in sql
         assert "=" in sql
         assert "$1" in sql
@@ -37,14 +32,14 @@ class TestConditionCompiler:
 
     def test_simple_equality_sqlite(self) -> None:
         compiler = ConditionCompiler("sqlite")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
 
         cond = User.email == "test@example.com"
         sql = compiler.compile(cond)
-        
+
         assert "email" in sql
         assert "=" in sql
         assert "?" in sql
@@ -52,7 +47,7 @@ class TestConditionCompiler:
 
     def test_comparison_operators(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             age = Column[int]()
@@ -65,7 +60,7 @@ class TestConditionCompiler:
             (User.age <= 65, "<="),
             (User.age != 21, "!="),
         ]
-        
+
         for cond, op in conditions:
             compiler = ConditionCompiler("postgresql")  # Reset
             sql = compiler.compile(cond)
@@ -74,27 +69,27 @@ class TestConditionCompiler:
 
     def test_like_operator(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
 
         cond = User.email.like("%@gmail.com")
         sql = compiler.compile(cond)
-        
+
         assert "LIKE" in sql
         assert "%@gmail.com" in compiler.parameters
 
     def test_in_operator(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             status = Column[str]()
 
         cond = User.status.in_(["active", "pending", "archived"])
         sql = compiler.compile(cond)
-        
+
         assert "IN" in sql
         assert "$1" in sql
         assert "$2" in sql
@@ -103,33 +98,33 @@ class TestConditionCompiler:
 
     def test_is_null(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             deleted_at = Column[datetime](nullable=True)
 
         cond = User.deleted_at.is_null()
         sql = compiler.compile(cond)
-        
+
         assert "IS NULL" in sql
         assert len(compiler.parameters) == 0
 
     def test_is_not_null(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             deleted_at = Column[datetime](nullable=True)
 
         cond = User.deleted_at.is_not_null()
         sql = compiler.compile(cond)
-        
+
         assert "IS NOT NULL" in sql
         assert len(compiler.parameters) == 0
 
     def test_and_condition(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             age = Column[int]()
@@ -137,7 +132,7 @@ class TestConditionCompiler:
 
         cond = (User.age > 18) & (User.status == "active")
         sql = compiler.compile(cond)
-        
+
         assert "AND" in sql
         assert "$1" in sql
         assert "$2" in sql
@@ -145,20 +140,20 @@ class TestConditionCompiler:
 
     def test_or_condition(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             status = Column[str]()
 
         cond = (User.status == "active") | (User.status == "pending")
         sql = compiler.compile(cond)
-        
+
         assert "OR" in sql
         assert compiler.parameters == ["active", "pending"]
 
     def test_complex_condition(self) -> None:
         compiler = ConditionCompiler("postgresql")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             age = Column[int]()
@@ -169,7 +164,7 @@ class TestConditionCompiler:
             User.email.like("%@admin.com")
         )
         sql = compiler.compile(cond)
-        
+
         assert "AND" in sql
         assert "OR" in sql
 
@@ -188,7 +183,7 @@ class TestSelectClause:
 
         select = SelectClause([User])
         sql = select.to_sql()
-        
+
         assert "SELECT *" in sql
         assert "FROM user" in sql
 
@@ -203,7 +198,7 @@ class TestSelectClause:
 
         select = SelectClause([User, Post])
         sql = select.to_sql()
-        
+
         assert "FROM user, post" in sql
 
     def test_select_specific_columns(self) -> None:
@@ -213,7 +208,7 @@ class TestSelectClause:
 
         select = SelectClause([User], columns=["id", "email"])
         sql = select.to_sql()
-        
+
         assert "SELECT id, email" in sql
 
 
@@ -227,7 +222,7 @@ class TestSelectQueryBuilder:
 
         builder = SelectQueryBuilder([User])
         stmt = builder.build()
-        
+
         assert "SELECT *" in stmt.text
         assert "FROM user" in stmt.text
 
@@ -239,7 +234,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.where(User.email == "test@example.com")
         stmt = builder.build()
-        
+
         assert "WHERE" in stmt.text
         assert stmt.parameters == ["test@example.com"]
 
@@ -252,7 +247,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.where((User.age > 18) & (User.status == "active"))
         stmt = builder.build()
-        
+
         assert "AND" in stmt.text
         assert stmt.parameters == [18, "active"]
 
@@ -263,7 +258,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.limit(10)
         stmt = builder.build()
-        
+
         assert "LIMIT 10" in stmt.text
 
     def test_select_with_offset(self) -> None:
@@ -273,7 +268,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.limit(10).offset(20)
         stmt = builder.build()
-        
+
         assert "LIMIT 10" in stmt.text
         assert "OFFSET 20" in stmt.text
 
@@ -285,7 +280,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.order_by("email")
         stmt = builder.build()
-        
+
         assert "ORDER BY email ASC" in stmt.text
 
     def test_select_with_order_by_desc(self) -> None:
@@ -296,7 +291,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.order_by("created_at", "DESC")
         stmt = builder.build()
-        
+
         assert "ORDER BY created_at DESC" in stmt.text
 
     def test_select_with_multiple_order_by(self) -> None:
@@ -308,7 +303,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.order_by("email").order_by("created_at", "DESC")
         stmt = builder.build()
-        
+
         assert "ORDER BY email ASC" in stmt.text
         assert "ORDER BY created_at DESC" in stmt.text
 
@@ -325,7 +320,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.join(Post).on(Post.user_id == User.id)
         stmt = builder.build()
-        
+
         assert "INNER JOIN post" in stmt.text
         assert "ON" in stmt.text
         assert "user_id" in stmt.text
@@ -342,7 +337,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         builder.join(Post, join_type="LEFT").on(Post.user_id == User.id)
         stmt = builder.build()
-        
+
         assert "LEFT JOIN post" in stmt.text
 
     def test_select_with_multiple_joins(self) -> None:
@@ -361,7 +356,7 @@ class TestSelectQueryBuilder:
         builder.join(Post).on(Post.user_id == User.id)
         builder.join(Comment).on(Comment.post_id == Post.id)
         stmt = builder.build()
-        
+
         assert "INNER JOIN post" in stmt.text
         assert "INNER JOIN comment" in stmt.text
 
@@ -385,7 +380,7 @@ class TestSelectQueryBuilder:
             .offset(0)
             .build()
         )
-        
+
         assert "WHERE" in stmt.text
         assert "JOIN" in stmt.text
         assert "ORDER BY" in stmt.text
@@ -400,7 +395,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User], sql_dialect="sqlite")
         builder.where(User.email == "test@example.com")
         stmt = builder.build()
-        
+
         # SQLite uses ? for placeholders
         assert "?" in stmt.text
         assert stmt.parameters == ["test@example.com"]
@@ -413,7 +408,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User], sql_dialect="mysql")
         builder.where(User.email == "test@example.com")
         stmt = builder.build()
-        
+
         # MySQL uses %s for placeholders
         assert "%s" in stmt.text
         assert stmt.parameters == ["test@example.com"]
@@ -425,7 +420,7 @@ class TestSelectQueryBuilder:
         builder = SelectQueryBuilder([User])
         with pytest.raises(AssertionError):
             builder.limit(0)
-        
+
         with pytest.raises(AssertionError):
             builder.limit(-5)
 

@@ -104,7 +104,7 @@ class Column[T]:
         nullable: Whether NULL values are allowed
         default: Static default value
         default_factory: Callable that returns default value
-    
+
     Usage:
         id = Column[int](primary_key=True)  # Type from generic parameter
         email = Column[str]()               # Type from generic parameter
@@ -120,16 +120,17 @@ class Column[T]:
     @classmethod
     def __class_getitem__(cls, item: Any) -> Callable[..., Column[Any]]:
         """Support type parameter syntax like Column[int]().
-        
+
         Returns a callable that creates a Column with the type pre-filled.
-        
+
         Example:
             id = Column[int](primary_key=True)
         """
+
         def _create_typed(**kwargs: Any) -> Column[Any]:
             """Create a Column with the generic type parameter."""
             return cls(python_type=item, **kwargs)
-        
+
         return _create_typed
 
     def __post_init__(self) -> None:
@@ -148,18 +149,23 @@ class Column[T]:
 
     def _validate_type(self) -> None:
         """Assert type is mappable to all database types."""
-        assert self.python_type is not None, "python_type must not be None in _validate_type"
-        
+        assert self.python_type is not None, (
+            "python_type must not be None in _validate_type"
+        )
+
         # Extract the base type if this is a union (e.g., int | None)
         type_to_check = self.python_type
-        
+
         # Handle union types (int | None) - Python 3.10+ syntax
         import types
+
         if isinstance(type_to_check, types.UnionType):
             # Get the non-None type from the union
             args = type_to_check.__args__
-            type_to_check = next((arg for arg in args if arg is not type(None)), args[0])
-        
+            type_to_check = next(
+                (arg for arg in args if arg is not type(None)), args[0]
+            )
+
         adapters = [PostgreSQLAdapter(), SQLiteAdapter(), MySQLAdapter()]
         for adapter in adapters:
             if not adapter.is_supported(type_to_check):
@@ -212,7 +218,7 @@ class ColumnRef[T]:
     def in_(self, values: list[T]) -> ColumnCondition:
         """SQL IN clause."""
         assert values, "IN list cannot be empty"
-        assert all(type(v) == self.python_type for v in values), (
+        assert all(type(v) is self.python_type for v in values), (
             f"All values in IN list must be type {self.python_type}"
         )
         return ColumnCondition(self.column_name, "IN", values, self.python_type)

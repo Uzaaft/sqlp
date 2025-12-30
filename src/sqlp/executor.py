@@ -24,7 +24,7 @@ class ExecutableQuery[T: BaseModel]:
         assert builder is not None, "Builder cannot be None"
         assert pool is not None, "Pool cannot be None"
         assert table is not None, "Table cannot be None"
-        
+
         self.builder = builder
         self.pool = pool
         self.table: type[Table] = table
@@ -33,10 +33,10 @@ class ExecutableQuery[T: BaseModel]:
         """Fetch first result row and map to table model."""
         stmt = self.builder.limit(1).build()
         row = await self.pool.fetch_one(stmt)
-        
+
         if row is None:
             return None
-        
+
         model_cls = self.table.__row_model__()
         model = cast(type[T], model_cls)
         return model(**row)
@@ -45,7 +45,7 @@ class ExecutableQuery[T: BaseModel]:
         """Fetch all result rows and map to table model."""
         stmt = self.builder.build()
         rows = await self.pool.fetch_all(stmt)
-        
+
         model_cls = self.table.__row_model__()
         model = cast(type[T], model_cls)
         return [model(**row) for row in rows]
@@ -57,11 +57,11 @@ class ExecutableQuery[T: BaseModel]:
         # Replace SELECT * with SELECT COUNT(*)
         count_sql = stmt.text.replace("SELECT *", "SELECT COUNT(*) as count", 1)
         count_stmt = SQLStatement(count_sql, stmt.parameters)
-        
+
         row = await self.pool.fetch_one(count_stmt)
         if row is None:
             return 0
-        
+
         return row.get("count", 0)
 
     async def __aiter__(self) -> AsyncGenerator[T, None]:
@@ -80,7 +80,7 @@ class ExecutableMutation:
     ) -> None:
         assert builder is not None, "Builder cannot be None"
         assert pool is not None, "Pool cannot be None"
-        
+
         self.builder = builder
         self.pool = pool
 

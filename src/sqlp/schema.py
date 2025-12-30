@@ -46,7 +46,7 @@ class SchemaValidator:
         Raises AssertionError if any mismatches are found.
         """
         assert tables, "At least one table required"
-        
+
         for table in tables:
             await self._validate_table(table)
 
@@ -54,17 +54,17 @@ class SchemaValidator:
         """Validate a single table."""
         table_name = table.__table_name__()
         expected_columns = table.__columns__()
-        
+
         # Get actual schema from database
         actual_columns = await self._get_db_columns(table_name)
-        
+
         # Check all expected columns exist
         for col_name, col in expected_columns.items():
             if col_name not in actual_columns:
                 raise AssertionError(
                     f"Column '{col_name}' in table '{table_name}' not found in database"
                 )
-            
+
             # Validate the column
             self._validate_column(
                 table_name,
@@ -72,7 +72,7 @@ class SchemaValidator:
                 col,
                 actual_columns[col_name],
             )
-        
+
         # Check for unexpected columns in database
         unexpected = set(actual_columns.keys()) - set(expected_columns.keys())
         if unexpected:
@@ -90,14 +90,14 @@ class SchemaValidator:
         """Validate a single column definition."""
         # Check type match
         expected_db_type = self._adapter.python_to_db(expected.python_type)
-        
+
         # Normalize DB types for comparison (some DBs use aliases)
         if not self._types_compatible(expected_db_type, actual.db_type):
             raise AssertionError(
                 f"Column '{col_name}' in table '{table_name}': "
                 f"expected type {expected_db_type}, got {actual.db_type}"
             )
-        
+
         # Check primary key match first
         if expected.primary_key != actual.is_primary_key:
             pk_str = "primary key" if expected.primary_key else "regular column"
@@ -106,7 +106,7 @@ class SchemaValidator:
                 f"Column '{col_name}' in table '{table_name}': "
                 f"expected {pk_str}, got {actual_str}"
             )
-        
+
         # Check nullable match (but primary keys are implicitly NOT NULL)
         # SQLite incorrectly reports primary keys as nullable, so we skip this check for PKs
         if not expected.primary_key and expected.nullable != actual.nullable:
@@ -122,11 +122,11 @@ class SchemaValidator:
         # Normalize types (handle VARCHAR(255) vs VARCHAR, etc)
         expected_base = expected.split("(")[0].upper()
         actual_base = actual.split("(")[0].upper()
-        
+
         # Direct match
         if expected_base == actual_base:
             return True
-        
+
         # Handle type aliases
         aliases = {
             "INTEGER": ["INT", "BIGINT", "SMALLINT"],
@@ -137,10 +137,10 @@ class SchemaValidator:
             "NUMERIC": ["DECIMAL"],
             "DECIMAL": ["NUMERIC"],
         }
-        
+
         if expected_base in aliases:
             return actual_base in aliases[expected_base] or actual_base == expected_base
-        
+
         return False
 
     async def _get_db_columns(self, table_name: str) -> dict[str, ColumnInfo]:
@@ -155,7 +155,7 @@ class SchemaValidator:
 
     async def _get_postgresql_columns(self, table_name: str) -> dict[str, ColumnInfo]:
         """Get columns from PostgreSQL."""
-        query = f"""
+        query = """
         SELECT column_name, data_type, is_nullable, 
                (SELECT EXISTS(
                    SELECT 1 FROM information_schema.table_constraints tc
@@ -167,10 +167,10 @@ class SchemaValidator:
         JOIN information_schema.tables t ON c.table_name = t.table_name
         WHERE c.table_name = %s AND t.table_schema = 'public'
         """
-        
+
         async with self.pool._get_connection() as conn:
             rows = await conn.fetch_all(query, [table_name])
-        
+
         columns: dict[str, ColumnInfo] = {}
         for row in rows:
             columns[row["column_name"]] = ColumnInfo(
@@ -179,16 +179,16 @@ class SchemaValidator:
                 nullable=row["is_nullable"] == "YES",
                 is_primary_key=row["is_pk"],
             )
-        
+
         return columns
 
     async def _get_sqlite_columns(self, table_name: str) -> dict[str, ColumnInfo]:
         """Get columns from SQLite."""
         query = f"PRAGMA table_info({table_name})"
-        
+
         async with self.pool._get_connection() as conn:
             rows = await conn.fetch_all(query, [])
-        
+
         columns: dict[str, ColumnInfo] = {}
         for row in rows:
             columns[row["name"]] = ColumnInfo(
@@ -197,21 +197,21 @@ class SchemaValidator:
                 nullable=row["notnull"] == 0,
                 is_primary_key=row["pk"] == 1,
             )
-        
+
         return columns
 
     async def _get_mysql_columns(self, table_name: str) -> dict[str, ColumnInfo]:
         """Get columns from MySQL."""
-        query = f"""
+        query = """
         SELECT column_name, column_type, is_nullable,
                column_key = 'PRI' as is_pk
         FROM information_schema.columns
         WHERE table_name = %s
         """
-        
+
         async with self.pool._get_connection() as conn:
             rows = await conn.fetch_all(query, [table_name])
-        
+
         columns: dict[str, ColumnInfo] = {}
         for row in rows:
             columns[row["COLUMN_NAME"]] = ColumnInfo(
@@ -220,17 +220,17 @@ class SchemaValidator:
                 nullable=row["IS_NULLABLE"] == "YES",
                 is_primary_key=row["is_pk"],
             )
-        
+
         return columns
 
 
 async def validate_schema(pool: AsyncPool, *tables: type[Table]) -> None:
     """Validate database schema against Table definitions.
-    
+
     Args:
         pool: AsyncPool connected to database
         tables: Table classes to validate
-    
+
     Raises:
         AssertionError: If any schema mismatches are found
     """

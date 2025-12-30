@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from sqlp.table import Table
-from sqlp.types import Column
 
 
 @dataclass
@@ -102,7 +101,9 @@ class SchemaSnapshot:
     def from_json(json_str: str) -> SchemaSnapshot:
         """Deserialize snapshot from JSON string."""
         data = json.loads(json_str)
-        assert data["version"] == "1.0", f"Unsupported schema version: {data['version']}"
+        assert data["version"] == "1.0", (
+            f"Unsupported schema version: {data['version']}"
+        )
 
         tables: dict[str, TableSnapshot] = {}
         for table_name, table_data in data["tables"].items():
@@ -161,9 +162,7 @@ class SchemaRegistry:
         """Get column snapshot by table and column name."""
         table = self.get_table(table_name)
         if column_name not in table.columns:
-            raise KeyError(
-                f"Column '{column_name}' not found in table '{table_name}'"
-            )
+            raise KeyError(f"Column '{column_name}' not found in table '{table_name}'")
         return table.columns[column_name]
 
     def get_primary_key(self, table_name: str) -> str | None:

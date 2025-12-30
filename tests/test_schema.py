@@ -15,6 +15,7 @@ class TestSchemaValidation:
     async def test_valid_schema_passes(self) -> None:
         """Test validation passes for matching schema."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -36,6 +37,7 @@ class TestSchemaValidation:
     async def test_missing_column_fails(self) -> None:
         """Test validation fails when column is missing from database."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -59,6 +61,7 @@ class TestSchemaValidation:
     async def test_unexpected_column_fails(self) -> None:
         """Test validation fails for unexpected columns in database."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -82,6 +85,7 @@ class TestSchemaValidation:
     async def test_wrong_type_fails(self) -> None:
         """Test validation fails for type mismatch."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -106,6 +110,7 @@ class TestSchemaValidation:
     async def test_nullable_mismatch_fails(self) -> None:
         """Test validation fails when nullability doesn't match."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str](nullable=False)
@@ -128,6 +133,7 @@ class TestSchemaValidation:
     async def test_primary_key_mismatch_fails(self) -> None:
         """Test validation fails when primary key doesn't match."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int]()  # Not a primary key
                 email = Column[str](primary_key=True)
@@ -150,6 +156,7 @@ class TestSchemaValidation:
     async def test_nullable_column_matches(self) -> None:
         """Test validation passes for nullable columns."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 bio = Column[str](nullable=True)
@@ -171,6 +178,7 @@ class TestSchemaValidation:
     async def test_multiple_tables_validation(self) -> None:
         """Test validation of multiple tables."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -205,13 +213,13 @@ class TestSchemaValidation:
     async def test_type_compatibility(self) -> None:
         """Test that compatible types pass validation."""
         validator = SchemaValidator(AsyncPool("sqlite://:memory:"))
-        
+
         # These should be compatible
         assert validator._types_compatible("INTEGER", "INT")
         assert validator._types_compatible("INT", "BIGINT")
         assert validator._types_compatible("TEXT", "VARCHAR")
         assert validator._types_compatible("FLOAT", "REAL")
-        
+
         # These should not be compatible
         assert not validator._types_compatible("INTEGER", "TEXT")
         assert not validator._types_compatible("FLOAT", "VARCHAR")
@@ -220,11 +228,12 @@ class TestSchemaValidation:
     async def test_table_not_found_fails(self) -> None:
         """Test validation fails when table doesn't exist in database."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
 
             # Don't create any tables
-            
+
             # Should raise - table not found
             with pytest.raises(AssertionError):
                 await validate_schema(pool, User)

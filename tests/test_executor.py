@@ -15,6 +15,7 @@ class TestAsyncExecution:
     async def test_first_returns_single_row(self) -> None:
         """Test .first() returns single row as model instance."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -53,6 +54,7 @@ class TestAsyncExecution:
     async def test_first_with_where_clause(self) -> None:
         """Test .first() with WHERE condition."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -88,6 +90,7 @@ class TestAsyncExecution:
     async def test_first_returns_none_for_no_results(self) -> None:
         """Test .first() returns None when no results."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -113,6 +116,7 @@ class TestAsyncExecution:
     async def test_all_returns_multiple_rows(self) -> None:
         """Test .all() returns list of model instances."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -148,6 +152,7 @@ class TestAsyncExecution:
     async def test_all_with_limit(self) -> None:
         """Test .all() respects LIMIT clause."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -179,6 +184,7 @@ class TestAsyncExecution:
     async def test_count(self) -> None:
         """Test .count() returns row count."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -209,6 +215,7 @@ class TestAsyncExecution:
     async def test_count_with_where(self) -> None:
         """Test .count() with WHERE condition."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 status = Column[str]()
@@ -247,6 +254,7 @@ class TestAsyncExecution:
     async def test_async_iteration(self) -> None:
         """Test async iteration over results."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -269,7 +277,7 @@ class TestAsyncExecution:
             # Execute
             builder = pool.select(User)
             query = attach_execution(builder, pool, User)
-            
+
             users = []
             async for user in query:
                 users.append(user)
@@ -281,6 +289,7 @@ class TestAsyncExecution:
     async def test_result_mapping_respects_nullable(self) -> None:
         """Test result mapping handles NULL values correctly."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -321,6 +330,7 @@ class TestMutationExecution:
     async def test_insert_execute(self) -> None:
         """Test INSERT execution."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -347,6 +357,7 @@ class TestMutationExecution:
     async def test_update_execute(self) -> None:
         """Test UPDATE execution."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -379,6 +390,7 @@ class TestMutationExecution:
     async def test_delete_execute(self) -> None:
         """Test DELETE execution."""
         async with AsyncPool("sqlite://:memory:") as pool:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
