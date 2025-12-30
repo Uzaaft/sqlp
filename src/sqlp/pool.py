@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager, suppress
 from typing import Any, AsyncGenerator
@@ -16,8 +15,11 @@ from sqlp.sql import (
     SQLStatement,
 )
 from sqlp.table import Table
-from sqlp.types import ColumnCondition, CompoundCondition
-from sqlp.snapshot import SchemaRegistry, load_schema_registry, should_validate_with_snapshot
+from sqlp.snapshot import (
+    SchemaRegistry,
+    load_schema_registry,
+    should_validate_with_snapshot,
+)
 
 
 class AsyncConnection(ABC):
@@ -185,7 +187,7 @@ class AsyncPool:
         self.min_size = min(min_size, max_size)
         self.max_size = max_size
         self.statement_cache_size = statement_cache_size
-        
+
         # Use provided registry, or load from config if env var says to use snapshot
         if registry is not None:
             self.registry: SchemaRegistry | None = registry
@@ -197,7 +199,7 @@ class AsyncPool:
         # Parse database URL
         parsed = urlparse(database_url)
         self.db_type = parsed.scheme.lower()
-        
+
         assert self.db_type in ("postgresql", "sqlite", "mysql"), (
             f"Unsupported database type: {self.db_type}"
         )
@@ -221,7 +223,7 @@ class AsyncPool:
 
         # Extract connection params from URL
         parsed = urlparse(self.database_url)
-        
+
         self._pool = await asyncpg.create_pool(
             user=parsed.username or "postgres",
             password=parsed.password or "",
@@ -240,7 +242,7 @@ class AsyncPool:
         db_path = self.database_url.replace("sqlite://", "")
         if db_path == ":memory:":
             db_path = ":memory:"
-        
+
         conn = await aiosqlite.connect(db_path)
         self._connection = SQLiteConnection(conn)
 
@@ -249,7 +251,7 @@ class AsyncPool:
         import aiomysql
 
         parsed = urlparse(self.database_url)
-        
+
         conn = await aiomysql.connect(
             host=parsed.hostname or "localhost",
             port=parsed.port or 3306,
@@ -264,7 +266,7 @@ class AsyncPool:
         if self._pool is not None:
             await self._pool.close()
             self._pool = None
-        
+
         if self._connection is not None:
             await self._connection.close()
             self._connection = None
@@ -320,17 +322,23 @@ class AsyncPool:
     def insert(self, table: type[Table]) -> InsertQueryBuilder:
         """Start an INSERT query."""
         assert table is not None, "Table required"
-        return InsertQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
+        return InsertQueryBuilder(
+            table, sql_dialect=self.db_type, registry=self.registry
+        )
 
     def update(self, table: type[Table]) -> UpdateQueryBuilder:
         """Start an UPDATE query."""
         assert table is not None, "Table required"
-        return UpdateQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
+        return UpdateQueryBuilder(
+            table, sql_dialect=self.db_type, registry=self.registry
+        )
 
     def delete(self, table: type[Table]) -> DeleteQueryBuilder:
         """Start a DELETE query."""
         assert table is not None, "Table required"
-        return DeleteQueryBuilder(table, sql_dialect=self.db_type, registry=self.registry)
+        return DeleteQueryBuilder(
+            table, sql_dialect=self.db_type, registry=self.registry
+        )
 
     async def execute(self, stmt: SQLStatement) -> int:
         """Execute a statement and return affected rows."""

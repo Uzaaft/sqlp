@@ -1,7 +1,6 @@
 """Tests for INSERT/UPDATE/DELETE query builders."""
 
 import pytest
-from datetime import datetime
 
 from sqlp.sql import InsertQueryBuilder, UpdateQueryBuilder, DeleteQueryBuilder
 from sqlp.table import Table
@@ -272,11 +271,7 @@ class TestDeleteQueryBuilder:
             id = Column[int](primary_key=True)
             status = Column[str]()
 
-        stmt = (
-            DeleteQueryBuilder(User)
-            .where(User.status == "archived")
-            .build()
-        )
+        stmt = DeleteQueryBuilder(User).where(User.status == "archived").build()
 
         assert "DELETE FROM user" in stmt.text
         assert "WHERE status = $1" in stmt.text
@@ -312,16 +307,15 @@ class TestMutationIntegration:
             verified = Column[bool](default=False)
 
         # Insert
-        insert_stmt = InsertQueryBuilder(User).values(
-            {"id": 1, "email": "test@example.com", "verified": False}
-        ).build()
+        insert_stmt = (
+            InsertQueryBuilder(User)
+            .values({"id": 1, "email": "test@example.com", "verified": False})
+            .build()
+        )
 
         # Update
         update_stmt = (
-            UpdateQueryBuilder(User)
-            .set(verified=True)
-            .where(User.id == 1)
-            .build()
+            UpdateQueryBuilder(User).set(verified=True).where(User.id == 1).build()
         )
 
         # Delete

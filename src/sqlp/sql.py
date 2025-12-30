@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from sqlp.types import ColumnCondition, ColumnRef, CompoundCondition
+from sqlp.types import ColumnCondition, CompoundCondition
 
 if TYPE_CHECKING:
     from sqlp.table import Table
@@ -32,7 +32,7 @@ class ConditionCompiler:
 
     def __init__(self, sql_dialect: str = "postgresql") -> None:
         """Initialize with a SQL dialect.
-        
+
         Dialects:
             postgresql: $1, $2, ... for placeholders
             sqlite: ? for placeholders
@@ -90,7 +90,7 @@ class ConditionCompiler:
         parts = []
         for cond in condition.conditions:
             parts.append(f"({self.compile(cond)})")
-        
+
         operator = f" {condition.operator} "
         return operator.join(parts)
 
@@ -108,12 +108,12 @@ class SelectClause:
             columns_part = "*"
         else:
             columns_part = ", ".join(self.columns)
-        
+
         # Build table aliases for FROM clause
         table_names = []
         for table in self.tables:
             table_names.append(table.__table_name__())
-        
+
         from_clause = ", ".join(table_names)
         return f"SELECT {columns_part} FROM {from_clause}"
 
@@ -130,11 +130,11 @@ class JoinClause:
         """Generate SQL JOIN clause."""
         table_name = self.table.__table_name__()
         sql = f"{self.join_type} JOIN {table_name}"
-        
+
         if self.on_condition:
             on_sql = compiler.compile(self.on_condition)
             sql += f" ON {on_sql}"
-        
+
         return sql
 
 
@@ -208,7 +208,7 @@ class SelectQueryBuilder:
         self.limit_clause: LimitClause | None = None
         self.offset_clause: OffsetClause | None = None
         self._compiler = ConditionCompiler(sql_dialect)
-        
+
         # Validate tables exist in registry if provided
         if self.registry is not None:
             for table in self.tables:
@@ -237,9 +237,7 @@ class SelectQueryBuilder:
         self.where_clause = WhereClause(condition)
         return self
 
-    def order_by(
-        self, column_name: str, direction: str = "ASC"
-    ) -> SelectQueryBuilder:
+    def order_by(self, column_name: str, direction: str = "ASC") -> SelectQueryBuilder:
         """Add ORDER BY clause."""
         assert column_name, "Column name cannot be empty"
         assert direction in ("ASC", "DESC"), f"Invalid direction: {direction}"
@@ -261,7 +259,7 @@ class SelectQueryBuilder:
     def build(self) -> SQLStatement:
         """Build the complete SQL statement."""
         self._validate_if_registry()
-        
+
         parts: list[str] = []
 
         # SELECT clause
@@ -290,21 +288,21 @@ class SelectQueryBuilder:
 
         sql_text = "\n".join(parts)
         return SQLStatement(sql_text, self._compiler.parameters.copy())
-    
+
     def _validate_if_registry(self) -> None:
         """Validate query against registry if provided."""
         if self.registry is None:
             return
-        
+
         # Validate WHERE conditions reference existing columns
         if self.where_clause:
             self._validate_condition(self.where_clause.condition)
-        
+
         # Validate JOIN conditions
         for join in self.join_clauses:
             if join.on_condition:
                 self._validate_condition(join.on_condition)
-        
+
         # Validate ORDER BY columns
         for order_by in self.order_by_clauses:
             # ORDER BY can reference columns from any selected table
@@ -318,8 +316,10 @@ class SelectQueryBuilder:
                 raise ValueError(
                     f"Column '{order_by.column_name}' not found in any selected table"
                 )
-    
-    def _validate_condition(self, condition: ColumnCondition | CompoundCondition) -> None:
+
+    def _validate_condition(
+        self, condition: ColumnCondition | CompoundCondition
+    ) -> None:
         """Validate a condition's columns exist in schema."""
         if isinstance(condition, ColumnCondition):
             # Check if column exists in any of the selected tables
@@ -351,9 +351,7 @@ class JoinBuilder:
         self.table = table
         self.join_type = join_type
 
-    def on(
-        self, condition: ColumnCondition | CompoundCondition
-    ) -> SelectQueryBuilder:
+    def on(self, condition: ColumnCondition | CompoundCondition) -> SelectQueryBuilder:
         """Complete JOIN with ON condition."""
         assert condition is not None, "ON condition cannot be None"
         join = JoinClause(self.join_type, self.table, condition)
@@ -376,14 +374,12 @@ class InsertQueryBuilder:
         self.registry = registry
         self._values: list[dict[str, Any]] = []
         self._compiler = ConditionCompiler(sql_dialect)
-        
+
         # Validate table exists in registry if provided
         if self.registry is not None:
             table_name = self.table.__table_name__()
             if not self.registry.table_exists(table_name):
-                raise ValueError(
-                    f"Table '{table_name}' not found in schema registry"
-                )
+                raise ValueError(f"Table '{table_name}' not found in schema registry")
 
     def values(self, *rows: Any) -> InsertQueryBuilder:
         """Add one or more rows to insert."""
@@ -395,29 +391,25 @@ class InsertQueryBuilder:
                 if hasattr(row, "model_dump"):
                     row_dict = row.model_dump()  # type: ignore
                 else:
-                    raise TypeError(
-                        f"Expected dict or Pydantic model, got {type(row)}"
-                    )
-            
+                    raise TypeError(f"Expected dict or Pydantic model, got {type(row)}")
+
             assert row_dict, "Row cannot be empty"
             self._values.append(row_dict)
-        
+
         return self
 
     def build(self) -> SQLStatement:
         """Build the INSERT statement."""
         assert self._values, "No values to insert"
-        
+
         # Get first row to extract column names (all rows should have same columns)
         first_row = self._values[0]
         columns = list(first_row.keys())
-        
+
         # Validate all rows have same columns
         for row in self._values[1:]:
-            assert set(row.keys()) == set(columns), (
-                "All rows must have same columns"
-            )
-        
+            assert set(row.keys()) == set(columns), "All rows must have same columns"
+
         # Validate columns exist in registry if provided
         if self.registry is not None:
             table_name = self.table.__table_name__()
@@ -426,26 +418,26 @@ class InsertQueryBuilder:
                     raise ValueError(
                         f"Column '{col_name}' not found in table '{table_name}'"
                     )
-        
+
         table_name = self.table.__table_name__()
         columns_str = ", ".join(columns)
-        
+
         # Build placeholders for each row
         parameters: list[Any] = []
         value_rows: list[str] = []
-        
+
         for row in self._values:
             row_params = []
             for col in columns:
                 param_placeholder = self._next_placeholder()
                 row_params.append(param_placeholder)
                 parameters.append(row[col])
-            
+
             value_rows.append(f"({', '.join(row_params)})")
-        
+
         values_str = ", ".join(value_rows)
         sql = f"INSERT INTO {table_name} ({columns_str})\nVALUES {values_str}"
-        
+
         return SQLStatement(sql, parameters)
 
     def _next_placeholder(self) -> str:
@@ -476,14 +468,12 @@ class UpdateQueryBuilder:
         self._set_values: dict[str, Any] = {}
         self.where_clause: WhereClause | None = None
         self._compiler = ConditionCompiler(sql_dialect)
-        
+
         # Validate table exists in registry if provided
         if self.registry is not None:
             table_name = self.table.__table_name__()
             if not self.registry.table_exists(table_name):
-                raise ValueError(
-                    f"Table '{table_name}' not found in schema registry"
-                )
+                raise ValueError(f"Table '{table_name}' not found in schema registry")
 
     def set(self, **kwargs: Any) -> UpdateQueryBuilder:
         """Set column values to update."""
@@ -502,7 +492,7 @@ class UpdateQueryBuilder:
     def build(self) -> SQLStatement:
         """Build the UPDATE statement."""
         assert self._set_values, "No columns to update"
-        
+
         # Validate columns exist in registry if provided
         if self.registry is not None:
             table_name = self.table.__table_name__()
@@ -511,32 +501,32 @@ class UpdateQueryBuilder:
                     raise ValueError(
                         f"Column '{col_name}' not found in table '{table_name}'"
                     )
-            
+
             # Validate WHERE condition if present
             if self.where_clause:
                 self._validate_condition(self.where_clause.condition, table_name)
-        
+
         table_name = self.table.__table_name__()
-        
+
         # Build SET clause with placeholders
         parameters: list[Any] = []
         set_parts: list[str] = []
-        
+
         for col_name, value in self._set_values.items():
             param_placeholder = self._next_placeholder()
             set_parts.append(f"{col_name} = {param_placeholder}")
             parameters.append(value)
-        
+
         set_str = ", ".join(set_parts)
         sql = f"UPDATE {table_name}\nSET {set_str}"
-        
+
         # Add WHERE clause if present
         if self.where_clause:
             # Need to create a new compiler for WHERE to continue placeholder count
             where_sql = self.where_clause.to_sql(self._compiler)
             sql += f"\n{where_sql}"
             parameters.extend(self._compiler.parameters)
-        
+
         return SQLStatement(sql, parameters)
 
     def _validate_condition(
@@ -579,14 +569,12 @@ class DeleteQueryBuilder:
         self.registry = registry
         self.where_clause: WhereClause | None = None
         self._compiler = ConditionCompiler(sql_dialect)
-        
+
         # Validate table exists in registry if provided
         if self.registry is not None:
             table_name = self.table.__table_name__()
             if not self.registry.table_exists(table_name):
-                raise ValueError(
-                    f"Table '{table_name}' not found in schema registry"
-                )
+                raise ValueError(f"Table '{table_name}' not found in schema registry")
 
     def where(
         self, condition: ColumnCondition | CompoundCondition
@@ -601,20 +589,20 @@ class DeleteQueryBuilder:
         assert self.where_clause is not None, (
             "DELETE requires WHERE clause (safety: no unrestricted deletes)"
         )
-        
+
         # Validate WHERE condition if registry provided
         if self.registry is not None:
             table_name = self.table.__table_name__()
             self._validate_condition(self.where_clause.condition, table_name)
-        
+
         table_name = self.table.__table_name__()
         sql = f"DELETE FROM {table_name}\n"
-        
+
         where_sql = self.where_clause.to_sql(self._compiler)
         sql += where_sql
-        
+
         return SQLStatement(sql, self._compiler.parameters.copy())
-    
+
     def _validate_condition(
         self, condition: ColumnCondition | CompoundCondition, table_name: str
     ) -> None:

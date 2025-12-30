@@ -1,7 +1,6 @@
 """Tests for async connection pool and execution."""
 
 import pytest
-import asyncio
 
 from sqlp.pool import AsyncPool
 from sqlp.table import Table
@@ -61,7 +60,7 @@ class TestAsyncPoolQueryBuilders:
 
     def test_select_builder(self) -> None:
         pool = AsyncPool("sqlite://:memory:")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
@@ -72,7 +71,7 @@ class TestAsyncPoolQueryBuilders:
 
     def test_insert_builder(self) -> None:
         pool = AsyncPool("postgresql://localhost/mydb")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
@@ -83,7 +82,7 @@ class TestAsyncPoolQueryBuilders:
 
     def test_update_builder(self) -> None:
         pool = AsyncPool("mysql://localhost/mydb")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
@@ -94,7 +93,7 @@ class TestAsyncPoolQueryBuilders:
 
     def test_delete_builder(self) -> None:
         pool = AsyncPool("sqlite://:memory:")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()
@@ -105,7 +104,7 @@ class TestAsyncPoolQueryBuilders:
 
     def test_select_multiple_tables(self) -> None:
         pool = AsyncPool("postgresql://localhost/mydb")
-        
+
         class User(Table):
             id = Column[int](primary_key=True)
 
@@ -128,6 +127,7 @@ class TestAsyncPoolSQLiteIntegration:
         await pool.connect()
 
         try:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -157,7 +157,7 @@ class TestAsyncPoolSQLiteIntegration:
             select_builder = pool.select(User)
             select_stmt = select_builder.build()
             rows = await pool.fetch_all(select_stmt)
-            
+
             assert len(rows) == 2
             assert rows[0]["email"] == "alice@example.com"
             assert rows[1]["name"] == "Bob"
@@ -172,6 +172,7 @@ class TestAsyncPoolSQLiteIntegration:
         await pool.connect()
 
         try:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -213,6 +214,7 @@ class TestAsyncPoolSQLiteIntegration:
         await pool.connect()
 
         try:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -258,6 +260,7 @@ class TestAsyncPoolSQLiteIntegration:
         await pool.connect()
 
         try:
+
             class User(Table):
                 id = Column[int](primary_key=True)
                 email = Column[str]()
@@ -300,6 +303,7 @@ class TestAsyncPoolSQLiteIntegration:
     @pytest.mark.asyncio
     async def test_sqlite_context_manager(self) -> None:
         """Test AsyncPool as context manager."""
+
         class User(Table):
             id = Column[int](primary_key=True)
             email = Column[str]()

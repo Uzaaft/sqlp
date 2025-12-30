@@ -1,18 +1,19 @@
 """Tests for type system and column metadata."""
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
+import pytest
+
 from sqlp.types import (
     Column,
-    ColumnRef,
     ColumnCondition,
+    ColumnRef,
     CompoundCondition,
+    MySQLAdapter,
     PostgreSQLAdapter,
     SQLiteAdapter,
-    MySQLAdapter,
 )
 
 
@@ -65,7 +66,7 @@ class TestColumnMetadata:
 
     def test_basic_column_creation(self) -> None:
         col = Column(int)
-        assert col.python_type == int
+        assert col.python_type is int
         assert col.primary_key is False
         assert col.unique is False
         assert col.nullable is False
@@ -110,7 +111,7 @@ class TestColumnRef:
     def test_column_ref_creation(self) -> None:
         ref = ColumnRef("id", int)
         assert ref.column_name == "id"
-        assert ref.python_type == int
+        assert ref.python_type is int
 
     def test_column_name_cannot_be_empty(self) -> None:
         with pytest.raises(AssertionError):
@@ -199,7 +200,9 @@ class TestColumnConditions:
         ref_age = ColumnRef("age", int)
         ref_status = ColumnRef("status", str)
         ref_email = ColumnRef("email", str)
-        cond = ((ref_age > 18) & (ref_status == "active")) | (ref_email.like("%@admin.com"))
+        cond = ((ref_age > 18) & (ref_status == "active")) | (
+            ref_email.like("%@admin.com")
+        )
         assert isinstance(cond, CompoundCondition)
         assert cond.operator == "OR"
 

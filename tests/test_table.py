@@ -95,7 +95,7 @@ class TestTableDefinition:
             age = Column[int | None](nullable=True)
 
         model = User.__row_model__()
-        
+
         # Should be able to instantiate with valid data
         user_data = {"id": 1, "email": "test@example.com", "age": None}
         user = model(**user_data)
@@ -111,7 +111,7 @@ class TestTableDefinition:
             email = Column[str]()
 
         model = User.__row_model__()
-        
+
         # Should fail with invalid types
         with pytest.raises(ValidationError):
             model(id="not_an_int", email="test@example.com")
@@ -124,7 +124,7 @@ class TestTableDefinition:
             bio = Column[str](nullable=False)
 
         model = User.__row_model__()
-        
+
         # Should fail when required field is None
         with pytest.raises(ValidationError):
             model(id=1, bio=None)
@@ -166,7 +166,7 @@ class TestTableMetadata:
             "name": Column(str),
         }
         meta = TableMetadata(name="users", columns=columns)
-        
+
         assert meta.name == "users"
         assert meta.primary_key == "id"
 
@@ -176,14 +176,14 @@ class TestTableMetadata:
             "email": Column(str, unique=True),
         }
         meta = TableMetadata(name="users", columns=columns)
-        
+
         col = meta.get_column("email")
         assert col.unique is True
 
     def test_get_nonexistent_column(self) -> None:
         columns: dict[str, Column] = {"id": Column(int, primary_key=True)}
         meta = TableMetadata(name="users", columns=columns)
-        
+
         with pytest.raises(KeyError):
             meta.get_column("nonexistent")
 

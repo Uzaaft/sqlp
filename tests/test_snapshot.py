@@ -10,8 +10,6 @@ from sqlp.snapshot import (
     TableSnapshot,
     SchemaSnapshot,
     SchemaRegistry,
-    get_config_snapshot_path,
-    should_validate_with_snapshot,
 )
 from sqlp.table import Table
 from sqlp.types import Column
@@ -266,11 +264,12 @@ class TestOfflineValidation:
 
         pool = AsyncPool("sqlite://:memory:", registry=registry)
         builder = pool.select(User)
-        
+
         # Add WHERE with non-existent column
         from sqlp.types import ColumnRef
+
         fake_ref = ColumnRef("name", str)
-        
+
         with pytest.raises(ValueError, match="not found"):
             builder.where(fake_ref == "test").build()
 
@@ -300,8 +299,9 @@ class TestOfflineValidation:
         builder = pool.update(User)
 
         from sqlp.types import ColumnRef
+
         user_id = ColumnRef("id", int)
-        
+
         with pytest.raises(ValueError, match="not found"):
             builder.set(name="Alice").where(user_id == 1).build()
 
@@ -317,6 +317,7 @@ class TestOfflineValidation:
         builder = pool.delete(User)
 
         from sqlp.types import ColumnRef
+
         fake_ref = ColumnRef("name", str)
 
         with pytest.raises(ValueError, match="not found"):
